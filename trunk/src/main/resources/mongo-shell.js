@@ -18,6 +18,11 @@ function print(s) {
 	console.info(s);
 }
 
+
+function printjson(obj) {
+	print(BSON.to(obj))
+}
+
 function use(databaseName) {
 	databaseSwitcher.switchDatabase(databaseName);
 	initDatabase();
@@ -62,6 +67,20 @@ function Collection (name, db) {
 			return this.collection.count()
 		}
 	}
+	
+	this.findOne = function(query, fields) {
+		if (query) {
+			if (fields !== undefined) {
+				return BSON.from(this.collection.findOne(BSON.to(query), BSON.to(fields)))
+			}
+			else {
+				return BSON.from(this.collection.findOne(BSON.to(query)))
+			}
+		} else {
+			return BSON.from(this.collection.findOne(BSON.to({})));
+		}
+	}
+	
 	
 	this.save = function(doc) {
 		this.collection.save(BSON.to(doc));
