@@ -131,7 +131,7 @@ public class ConfigContainer extends JPanel {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				JOptionPane.showMessageDialog(ConfigContainer.this.mainWindow, 
-						"<html><h2>The mongodb-shell 0.1-alpha.</h2>\n" +
+						"<html><h2>The mongodb-shell "+ MainWindow.VERSION+".</h2>\n" +
 						"Visit http://code.google.com/p/mongodb-shell\n" +
 						"for more information.", "About", JOptionPane.INFORMATION_MESSAGE);
 				
