@@ -22,6 +22,7 @@ import org.smartapp.mongodb.console.TextAreaConsoleImpl;
 
 public class MainWindow extends JFrame {
 
+	static final String VERSION = "0.2-alpha";
 	/** */
 	private static final long serialVersionUID = -951506042833748903L;
 	private static JFileChooser fileChooser;
@@ -34,7 +35,7 @@ public class MainWindow extends JFrame {
 
 	public MainWindow() {
 		
-		super("mongodb-shell 0.1-alpha");
+		super("mongodb-shell " + VERSION);
 
 		console = new TextAreaConsoleImpl();
 

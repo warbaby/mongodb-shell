@@ -28,12 +28,16 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextPane;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
+import javax.swing.text.EditorKit;
 import javax.swing.text.Element;
+import javax.swing.text.StyledDocument;
 
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ImporterTopLevel;
@@ -43,6 +47,7 @@ import org.mozilla.javascript.NativeObject;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.Undefined;
 
+import com.Ostermiller.Syntax.HighlightedDocument;
 import com.mongodb.DBCursor;
 import com.mongodb.Mongo;
 
@@ -56,7 +61,7 @@ public class EditorContainer extends JPanel {
 
 	private static final long serialVersionUID = -4549370027086652349L;
 	
-	private JTextArea editor;
+	private JTextPane editor;
 
 	private JTabbedPane resultContainer;
 
@@ -94,7 +99,9 @@ public class EditorContainer extends JPanel {
 		
 		
 		
-		editor = new JTextArea();
+		HighlightedDocument doc = new HighlightedDocument();
+		doc.setHighlightStyle(HighlightedDocument.JAVASCRIPT_STYLE);
+		editor = new JTextPane(doc);
 		initEditor();
 		
 		resultContainer = new JTabbedPane();
@@ -264,6 +271,7 @@ public class EditorContainer extends JPanel {
 	}
 	
 	
+
 	protected void collapseAll() {
 		dbExplorer.collapseAll();		
 	}
@@ -320,12 +328,20 @@ public class EditorContainer extends JPanel {
 			Reader reader = null;
 			try {
 				reader = new FileReader(fileName);
-				editor.read(reader, fileName);
+
+				EditorKit kit = editor.getUI().getEditorKit(editor);
+				HighlightedDocument doc = new HighlightedDocument();
+
+	            kit.read(reader, doc, 0);
+				editor.setDocument(doc);
+
+				doc.setHighlightStyle(HighlightedDocument.JAVASCRIPT_STYLE);
+
 				console.info("Loaded from ", fileName);
 				dirty = false;
 				updateTabText();
-				initDocumentListtener();
-			} catch (IOException e) {
+				initDocumentListener();
+			} catch (Exception e) {
 				console.error("Error reading from file: ", fileName);
 				e.printStackTrace();
 				
@@ -563,7 +579,7 @@ public class EditorContainer extends JPanel {
 
 
 	private void initEditor() {
-		editor.setTabSize(4);
+//		editor.setTabSize(2);
 		editor.addCaretListener(new CaretListener() {
 			
 			@Override
@@ -579,7 +595,7 @@ public class EditorContainer extends JPanel {
 				
 			}
 		});
-		initDocumentListtener();
+		initDocumentListener();
 		editor.addKeyListener(new KeyListener() {
 			
 			@Override
@@ -606,23 +622,23 @@ public class EditorContainer extends JPanel {
 	}
 
 
-	private void initDocumentListtener() {
+	private void initDocumentListener() {
 		editor.getDocument().addDocumentListener(new DocumentListener() {
 			
 			@Override
 			public void removeUpdate(DocumentEvent e) {
-				markAsDirty();
+				markAsDirty(e);
 			}
 			
 			@Override
 			public void insertUpdate(DocumentEvent e) {
-				markAsDirty();
+				markAsDirty(e);
 				
 			}
 			
 			@Override
 			public void changedUpdate(DocumentEvent e) {
-				markAsDirty();
+				markAsDirty(e);
 				
 			}
 		});
@@ -631,9 +647,13 @@ public class EditorContainer extends JPanel {
 
 
 
-	protected void markAsDirty() {
-		this.dirty = true;
-		updateTabText();
+	protected void markAsDirty(DocumentEvent e) {
+		// a hack to _not_ mark as dirty by changes related to code highlighting.
+		String eventString = e.toString();
+		if (!"[]".equals(eventString) && eventString.indexOf("AttributeUndoableEdit") < 0 ) {
+			this.dirty = true;
+			updateTabText();
+		}
 
 	}
 
@@ -731,7 +751,14 @@ public class EditorContainer extends JPanel {
 
 
 	public void appendText(String text) {
-		editor.append(text);
+        Document doc = editor.getDocument();
+        if (doc != null) {
+            try {
+                doc.insertString(doc.getLength(), text, null);
+            } catch (BadLocationException e) {
+            	e.printStackTrace();
+            }
+        }
 		
 	}
 	

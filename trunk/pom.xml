@@ -4,7 +4,7 @@
 	<groupId>mongodb-shell</groupId>
 	<artifactId>mongodb-shell</artifactId>
 	<packaging>jar</packaging>
-	<version>0.1-ALPHA</version>
+	<version>0.2-ALPHA</version>
 	<dependencies>
 		<dependency>
 			<groupId>org.mongodb</groupId>
@@ -15,6 +15,11 @@
 			<groupId>mongodb-rhino</groupId>
 			<artifactId>mongodb-rhino</artifactId>
 			<version>R72</version>
+		</dependency>
+		<dependency>
+			<groupId>com.Ostermiller</groupId>
+			<artifactId>Syntax</artifactId>
+			<version>noversion</version>
 		</dependency>
 		<dependency>
 			<groupId>rhino</groupId>
