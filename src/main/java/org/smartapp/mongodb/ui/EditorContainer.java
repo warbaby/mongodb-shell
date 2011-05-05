@@ -2,8 +2,11 @@ package org.smartapp.mongodb.ui;
 
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.FontMetrics;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -19,6 +22,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
@@ -33,11 +37,17 @@ import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.EditorKit;
 import javax.swing.text.Element;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
+import javax.swing.text.TabSet;
+import javax.swing.text.TabStop;
 
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ImporterTopLevel;
@@ -101,12 +111,18 @@ public class EditorContainer extends JPanel {
 		
 		HighlightedDocument doc = new HighlightedDocument();
 		doc.setHighlightStyle(HighlightedDocument.JAVASCRIPT_STYLE);
+		
 		editor = new JTextPane(doc);
+
+		// editorResizableWrapper is a workaround to disable JTextPane line wrapping
+		JPanel editorResizableWrapper = new JPanel(new BorderLayout(0,0));
+		editorResizableWrapper.add(editor);
+		
 		initEditor();
 		
 		resultContainer = new JTabbedPane();
 		
-		JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, new JScrollPane(editor), resultContainer);
+		JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, new JScrollPane(editorResizableWrapper), resultContainer);
 		splitPane.setDividerLocation(300);
 		
 		
@@ -580,6 +596,23 @@ public class EditorContainer extends JPanel {
 
 	private void initEditor() {
 //		editor.setTabSize(2);
+		
+		Toolkit t = Toolkit.getDefaultToolkit();
+		FontMetrics fm = t.getFontMetrics(editor.getFont()); // deprecated!
+		int cw = fm.stringWidth("   ");
+		float f = (float)cw;
+		TabStop[] tabs = new TabStop[50]; // this sucks
+	 
+		for(int i = 0; i < tabs.length; i++){
+			tabs[i] = new TabStop(f * 3 * (i + 1), TabStop.ALIGN_LEFT, TabStop.LEAD_NONE);
+		}
+	   
+		TabSet tabset = new TabSet(tabs);
+		StyleContext sc = StyleContext.getDefaultStyleContext();
+		AttributeSet aset = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.TabSet, tabset);
+		editor.setParagraphAttributes(aset, false);	
+		
+		
 		editor.addCaretListener(new CaretListener() {
 			
 			@Override

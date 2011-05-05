@@ -38,6 +38,9 @@ public class MainWindow extends JFrame {
 		super("mongodb-shell " + VERSION);
 
 		console = new TextAreaConsoleImpl();
+		JPanel consoleResizableWrapper = new JPanel(new BorderLayout(0,0));
+		consoleResizableWrapper.add(console);
+		
 
 		Component configContailer = new ConfigContainer(this);
 
@@ -52,7 +55,7 @@ public class MainWindow extends JFrame {
 		mainContainer.add(editorTabContailer, BorderLayout.CENTER);
 
 
-		JSplitPane splitPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT, mainContainer, new JScrollPane(console));
+		JSplitPane splitPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT, mainContainer, new JScrollPane(consoleResizableWrapper));
 		splitPanel.setDividerLocation(650);
 		add(splitPanel);
 		setSize(1000, 800);
