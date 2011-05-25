@@ -8,6 +8,7 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -22,11 +23,11 @@ import org.smartapp.mongodb.console.TextAreaConsoleImpl;
 
 public class MainWindow extends JFrame {
 
-	static final String VERSION = "0.2-alpha";
+	static final String VERSION = "0.3-alpha";
 	/** */
 	private static final long serialVersionUID = -951506042833748903L;
 	private static JFileChooser fileChooser;
-	private JTabbedPane editorTabContailer;
+	private JTabbedPane editorTabContainer;
 	private TextAreaConsoleImpl console;
 	
 	public Console getConsole() {
@@ -44,7 +45,7 @@ public class MainWindow extends JFrame {
 
 		Component configContailer = new ConfigContainer(this);
 
-		editorTabContailer = new JTabbedPane();
+		editorTabContainer = new JTabbedPane();
 		
 //		JSplitPane mainContainer = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, configContailer, editorTabContailer);
 //		mainContainer.setDividerLocation(180);
@@ -52,7 +53,7 @@ public class MainWindow extends JFrame {
 		
 		JPanel mainContainer = new JPanel(new BorderLayout());
 		mainContainer.add(configContailer, BorderLayout.WEST);
-		mainContainer.add(editorTabContailer, BorderLayout.CENTER);
+		mainContainer.add(editorTabContainer, BorderLayout.CENTER);
 
 
 		JSplitPane splitPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT, mainContainer, new JScrollPane(consoleResizableWrapper));
@@ -72,10 +73,16 @@ public class MainWindow extends JFrame {
 			Mongo mongo = new Mongo(config.getHost(), config.getPort());
 			// validate connection
 			mongo.getDatabaseNames();
-			Component editorContainer = new EditorContainer(mongo, config.getName(), console);
-			editorTabContailer.addTab(config.getName(), editorContainer);
-			editorTabContailer.setSelectedIndex(editorTabContailer.getTabCount() - 1);
-			console.info("Connected to: ", config.getName());
+			String title = config.getName();
+			int count = 0;
+			while (titleExists(title)) {
+				title = config.getName() + " (" + (++count) +")";
+			}
+			EditorContainer editorContainer = new EditorContainer(mongo, title, console);
+			editorTabContainer.addTab(title, editorContainer);
+			editorTabContainer.setTabComponentAt(editorTabContainer.getTabCount() - 1, new TabLabel(title, editorContainer));
+			editorTabContainer.setSelectedIndex(editorTabContainer.getTabCount() - 1);
+			console.info("Connected to: ", title);
 		} catch (Exception e) {
 			e.printStackTrace();
 			console.error("Error: ", e.getClass().getSimpleName(), ": ", e.getMessage());
@@ -85,6 +92,16 @@ public class MainWindow extends JFrame {
 		
 	}
 	
+	private boolean titleExists(String title) {
+		for (int i = 0; i < editorTabContainer.getTabCount(); i++) {
+			String tabTitle = ((TabLabel)editorTabContainer.getTabComponentAt(i)).getTitle();
+			if (title.equals(tabTitle) || ("*" + title).equals(tabTitle) )
+				return true;
+		}
+		
+		return false;
+	}
+
 	public static Icon createIcon(String name) {
 		return new ImageIcon(MainWindow.class.getResource("/icons/" + name));
 	}
@@ -98,9 +115,9 @@ public class MainWindow extends JFrame {
 	}
 
 	public boolean canClose() {
-		while (editorTabContailer.getTabCount() > 0) {
-			EditorContainer editorContainer = (EditorContainer) editorTabContailer.getComponentAt(editorTabContailer.getSelectedIndex());
-			if (! editorContainer.closeCurrentSession())
+		while (editorTabContainer.getTabCount() > 0) {
+			EditorContainer editorContainer = (EditorContainer) editorTabContainer.getComponentAt(editorTabContainer.getSelectedIndex());
+			if (! editorContainer.close())
 				return false;
 		}
 		return true;
