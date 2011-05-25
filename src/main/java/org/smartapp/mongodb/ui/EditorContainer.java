@@ -54,7 +54,6 @@ import org.mozilla.javascript.ImporterTopLevel;
 import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.NativeJavaObject;
 import org.mozilla.javascript.NativeObject;
-import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.Undefined;
 
 import com.Ostermiller.Syntax.HighlightedDocument;
@@ -67,7 +66,7 @@ import org.smartapp.mongodb.script.DatabaseSwitcher;
 import org.smartapp.mongodb.script.PreProcessor;
 import org.smartapp.mongodb.script.ScriptQueueEntry;
 
-public class EditorContainer extends JPanel {
+public class EditorContainer extends JPanel implements Closeable {
 
 	private static final long serialVersionUID = -4549370027086652349L;
 	
@@ -233,7 +232,7 @@ public class EditorContainer extends JPanel {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				closeCurrentSession();
+				close();
 				
 			}
 		});
@@ -373,9 +372,9 @@ public class EditorContainer extends JPanel {
 		
 	}
 
-
-	public boolean closeCurrentSession() {
-		if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, "Are you sure to close current connection?", "Close Connection", JOptionPane.YES_NO_OPTION)) {
+	@Override
+	public boolean close() {
+		if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, "Are you sure to close current connection?", "Close connection", JOptionPane.YES_NO_OPTION)) {
 			workerThread.interrupt();
 			if (mongo!=null) {
 				mongo.close();
@@ -694,9 +693,7 @@ public class EditorContainer extends JPanel {
 	private void updateTabText() {
 		JTabbedPane parent = (JTabbedPane) getParent();
 		int index = parent.getSelectedIndex();
-		parent.setTitleAt(index, dirty ? "*" + sessionName : sessionName);
-		
-		
+		((TabLabel)parent.getTabComponentAt(index)).setTitle(dirty ? "*" + sessionName : sessionName);
 	}
 
 
@@ -704,15 +701,23 @@ public class EditorContainer extends JPanel {
 		while (resultContainer.getTabCount() >= 5)
 			resultContainer.removeTabAt(0);
 		
-		JPanel resultPanel = new JPanel(new BorderLayout());
+		final JPanel resultPanel = new JPanel(new BorderLayout());
 		
 		JTextArea result = new JTextArea();
 		result.setTabSize(4);
 		result.setText(resultText);
 		resultPanel.add(new JScrollPane(result));
 		
-		resultContainer.addTab(expr.length() > 20 ? expr.substring(0, 20) : expr, resultPanel);
+		String title = expr.length() > 20 ? expr.substring(0, 20) : expr;
+		resultContainer.addTab(title, resultPanel);
 		
+		resultContainer.setTabComponentAt(resultContainer.getTabCount() - 1, new TabLabel(title, new Closeable(){
+
+			@Override
+			public boolean close() {
+				resultContainer.remove(resultPanel);
+				return true;
+			}}));
 		resultContainer.setSelectedIndex(resultContainer.getTabCount() - 1);
 	}
 
