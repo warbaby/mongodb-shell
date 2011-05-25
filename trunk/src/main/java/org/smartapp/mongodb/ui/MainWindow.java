@@ -74,7 +74,7 @@ public class MainWindow extends JFrame {
 			// validate connection
 			mongo.getDatabaseNames();
 			String title = config.getName();
-			int count = 0;
+			int count = 1;
 			while (titleExists(title)) {
 				title = config.getName() + " (" + (++count) +")";
 			}
