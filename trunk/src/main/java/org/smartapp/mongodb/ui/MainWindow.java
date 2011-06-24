@@ -3,23 +3,21 @@ package org.smartapp.mongodb.ui;
 import java.awt.BorderLayout;
 import java.awt.Component;
 
-import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 
-import com.mongodb.Mongo;
-
 import org.smartapp.mongodb.config.ConnectionConfig;
 import org.smartapp.mongodb.console.Console;
 import org.smartapp.mongodb.console.TextAreaConsoleImpl;
+
+import com.mongodb.Mongo;
 
 public class MainWindow extends JFrame {
 
@@ -78,7 +76,7 @@ public class MainWindow extends JFrame {
 			while (titleExists(title)) {
 				title = config.getName() + " (" + (++count) +")";
 			}
-			EditorContainer editorContainer = new EditorContainer(mongo, title, console);
+			SessionContainer editorContainer = new SessionContainer(mongo, title, console);
 			editorTabContainer.addTab(title, editorContainer);
 			editorTabContainer.setTabComponentAt(editorTabContainer.getTabCount() - 1, new TabLabel(title, editorContainer));
 			editorTabContainer.setSelectedIndex(editorTabContainer.getTabCount() - 1);
@@ -116,7 +114,7 @@ public class MainWindow extends JFrame {
 
 	public boolean canClose() {
 		while (editorTabContainer.getTabCount() > 0) {
-			EditorContainer editorContainer = (EditorContainer) editorTabContainer.getComponentAt(editorTabContainer.getSelectedIndex());
+			SessionContainer editorContainer = (SessionContainer) editorTabContainer.getComponentAt(editorTabContainer.getSelectedIndex());
 			if (! editorContainer.close())
 				return false;
 		}
