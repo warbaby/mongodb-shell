@@ -2,7 +2,6 @@ package org.smartapp.mongodb.ui;
 
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
@@ -22,7 +21,6 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
-import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
@@ -37,6 +35,8 @@ import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
@@ -45,9 +45,9 @@ import javax.swing.text.Element;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
-import javax.swing.text.StyledDocument;
 import javax.swing.text.TabSet;
 import javax.swing.text.TabStop;
+import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ImporterTopLevel;
@@ -55,18 +55,20 @@ import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.NativeJavaObject;
 import org.mozilla.javascript.NativeObject;
 import org.mozilla.javascript.Undefined;
-
-import com.Ostermiller.Syntax.HighlightedDocument;
-import com.mongodb.DBCursor;
-import com.mongodb.Mongo;
-
 import org.smartapp.mongodb.console.Console;
 import org.smartapp.mongodb.script.DatabaseObject;
 import org.smartapp.mongodb.script.DatabaseSwitcher;
 import org.smartapp.mongodb.script.PreProcessor;
 import org.smartapp.mongodb.script.ScriptQueueEntry;
+import org.smartapp.mongodb.ui.browser.BrowserContainer;
+import org.smartapp.mongodb.ui.explorer.DatabaseExplorerContainer;
+import org.smartapp.mongodb.ui.explorer.tree.TreeItem;
 
-public class EditorContainer extends JPanel implements Closeable {
+import com.Ostermiller.Syntax.HighlightedDocument;
+import com.mongodb.DBCursor;
+import com.mongodb.Mongo;
+
+public class SessionContainer extends JPanel implements Closeable {
 
 	private static final long serialVersionUID = -4549370027086652349L;
 	
@@ -95,12 +97,16 @@ public class EditorContainer extends JPanel implements Closeable {
 	private DatabaseExplorerContainer dbExplorer;
 
 	private JLabel carretPosition;
+
+	private JTabbedPane sessionTabbedPane;
+
+	private BrowserContainer browserContainer;
 	
 	
 	
 	
 	
-	public EditorContainer(final Mongo mongo, String sessionName, Console console) {
+	public SessionContainer(final Mongo mongo, String sessionName, Console console) {
 		super(new BorderLayout());
 		
 		this.console = console;
@@ -246,7 +252,27 @@ public class EditorContainer extends JPanel implements Closeable {
 		add(toolbar, BorderLayout.NORTH);
 		
 		dbExplorer = new DatabaseExplorerContainer(mongo, this);
-		JSplitPane splitHPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, dbExplorer, splitPane);
+		
+		sessionTabbedPane = new JTabbedPane();
+		sessionTabbedPane.addTab("Editor", splitPane);
+		browserContainer = new BrowserContainer();
+		sessionTabbedPane.addTab("Browser", browserContainer );
+		
+		dbExplorer.addTreeSelectionListener(new TreeSelectionListener() {
+
+
+			@Override
+			public void valueChanged(TreeSelectionEvent e) {
+				DefaultMutableTreeNode node = (DefaultMutableTreeNode)e.getPath().getLastPathComponent();
+
+				TreeItem obj = (TreeItem) node.getUserObject();
+				if (sessionTabbedPane.getSelectedIndex() == 1)
+					obj.populateBrowseContainer(mongo, browserContainer);
+
+			}
+		});
+		
+		JSplitPane splitHPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, dbExplorer, sessionTabbedPane);
 		splitHPane.setDividerLocation(150);
 
 		add(splitHPane, BorderLayout.CENTER);
@@ -271,7 +297,7 @@ public class EditorContainer extends JPanel implements Closeable {
 						return;
 						
 					} catch (Exception e) {
-						EditorContainer.this.console.error("Error: ", e.getMessage());
+						SessionContainer.this.console.error("Error: ", e.getMessage());
 						e.printStackTrace();
 					}
 				}
@@ -424,9 +450,7 @@ public class EditorContainer extends JPanel implements Closeable {
 			// do nothing
 		}
 		else {
-			StringBuffer buffer = new StringBuffer();
-			formatObject(result, buffer);
-			populateResultPane(expr, buffer.toString());
+			populateResultPane(expr, result);
 		}
 	}
 	
@@ -697,15 +721,18 @@ public class EditorContainer extends JPanel implements Closeable {
 	}
 
 
-	private void populateResultPane(String expr, String resultText) {
+	private void populateResultPane(String expr, Object value) {
 		while (resultContainer.getTabCount() >= 5)
 			resultContainer.removeTabAt(0);
 		
 		final JPanel resultPanel = new JPanel(new BorderLayout());
 		
+		StringBuffer buffer = new StringBuffer();
+		formatObject(value, buffer);
+		
 		JTextArea result = new JTextArea();
 		result.setTabSize(4);
-		result.setText(resultText);
+		result.setText(buffer.toString());
 		resultPanel.add(new JScrollPane(result));
 		
 		String title = expr.length() > 20 ? expr.substring(0, 20) : expr;
@@ -788,11 +815,11 @@ public class EditorContainer extends JPanel implements Closeable {
 	}
 
 
-	public void appendText(String text) {
+	public void insertText(String text) {
         Document doc = editor.getDocument();
         if (doc != null) {
             try {
-                doc.insertString(doc.getLength(), text, null);
+                doc.insertString(editor.getCaretPosition(), text, null);
             } catch (BadLocationException e) {
             	e.printStackTrace();
             }
