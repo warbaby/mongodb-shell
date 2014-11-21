@@ -11,16 +11,16 @@
 			<artifactId>mongo-java-driver</artifactId>
 			<version>2.5.3</version>
 		</dependency>
-		<dependency>
-			<groupId>mongodb-rhino</groupId>
-			<artifactId>mongodb-rhino</artifactId>
-			<version>R72</version>
-		</dependency>
-		<dependency>
-			<groupId>com.Ostermiller</groupId>
-			<artifactId>Syntax</artifactId>
-			<version>noversion</version>
-		</dependency>
+        <dependency>
+            <groupId>org.mozilla</groupId>
+            <artifactId>rhino</artifactId>
+            <version>1.7R4</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.squirrel-sql.thirdparty-non-maven</groupId>
+            <artifactId>ostermiller-syntax</artifactId>
+            <version>1.1.1</version>
+        </dependency>
 		<dependency>
 			<groupId>rhino</groupId>
 			<artifactId>js</artifactId>

@@ -29,6 +29,12 @@ function use(databaseName) {
 	print("switched to db " + databaseName);
 }
 
+function load(resource) {
+    resourceManager.load(resource);
+    print("loaded " + resource);
+}
+
+
 function DB (name) {
 	this.database = connection.getDB(name);
 	var colNames = this.database.getCollectionNames().iterator();

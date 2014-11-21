@@ -59,6 +59,7 @@ import org.smartapp.mongodb.console.Console;
 import org.smartapp.mongodb.script.DatabaseObject;
 import org.smartapp.mongodb.script.DatabaseSwitcher;
 import org.smartapp.mongodb.script.PreProcessor;
+import org.smartapp.mongodb.script.ResourceManager;
 import org.smartapp.mongodb.script.ScriptQueueEntry;
 import org.smartapp.mongodb.ui.browser.BrowserContainer;
 import org.smartapp.mongodb.ui.explorer.DatabaseExplorerContainer;
@@ -416,7 +417,7 @@ public class SessionContainer extends JPanel implements Closeable {
 
 
 	private void checkDocumentDirty() {
-		if (dirty && JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, "The document contains unsaved chnages. Do you want to save it now?", "Save Changes", JOptionPane.YES_NO_OPTION))
+		if (dirty && JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, "The document contains unsaved changes. Do you want to save it now?", "Save Changes", JOptionPane.YES_NO_OPTION))
 			saveFile();
 		
 	}
@@ -429,6 +430,8 @@ public class SessionContainer extends JPanel implements Closeable {
 			scope.put("console", scope, console);
 			scope.put("connection", scope, mongo);
 			scope.put("databaseSwitcher", scope, new DatabaseSwitcher(mongo, context, scope));
+			scope.put("resourceManager", scope, new ResourceManager(context, scope));
+			
 			context.initStandardObjects();
 			Reader in = new InputStreamReader(getClass().getResourceAsStream("/mongo-shell.js"));
 			context.evaluateReader(scope, in, "<initfile>", 0, null);

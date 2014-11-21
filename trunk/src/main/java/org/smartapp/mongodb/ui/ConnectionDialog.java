@@ -181,6 +181,11 @@ public class ConnectionDialog extends JDialog {
 		passwordField.setText(connectionConfig.getPassword());
 		updateAuthFields();
 	}
+
+	public void defaultConnectionConfig() {
+		portField.setText("27017");
+	}
+	
 	
 	private ConfigurationListener listener;
 	
@@ -268,6 +273,8 @@ public class ConnectionDialog extends JDialog {
 		setVisible(false);
 		
 	}
+
+
 	
 
 }
