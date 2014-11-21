@@ -31,7 +31,7 @@ import org.smartapp.mongodb.config.ConnectionConfig;
 public class ConfigContainer extends JPanel {
 	
 	private static final long serialVersionUID = 84089093022263727L;
-	private DefaultListModel configListModel;
+	private DefaultListModel<ConnectionConfig> configListModel;
 	private MainWindow mainWindow;
 	private XStream xstream;
 
@@ -39,8 +39,8 @@ public class ConfigContainer extends JPanel {
 		super(new BorderLayout());
 		setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
 		
-		configListModel = new DefaultListModel();
-		final JList configList = new JList(configListModel);
+		configListModel = new DefaultListModel<ConnectionConfig>();
+		final JList<ConnectionConfig> configList = new JList<ConnectionConfig>(configListModel);
 		
 		configList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
@@ -57,7 +57,7 @@ public class ConfigContainer extends JPanel {
 			public void actionPerformed(ActionEvent e) {
 				int tmp = configList.getSelectedIndex();
 				if (tmp >= 0) {
-					ConfigContainer.this.mainWindow.connect((ConnectionConfig) configListModel.getElementAt(tmp));
+					ConfigContainer.this.mainWindow.connect( configListModel.getElementAt(tmp));
 				}
 				
 			}
@@ -150,7 +150,7 @@ public class ConfigContainer extends JPanel {
 		    public void mouseClicked(MouseEvent e) {
 		        if (e.getClickCount() == 2) {
 		            int index = configList.locationToIndex(e.getPoint());
-		            ConnectionConfig connectioncConfig = (ConnectionConfig) configListModel.get(index);
+		            ConnectionConfig connectioncConfig =  configListModel.get(index);
 		            if (connectioncConfig != null) {
 		            	ConfigContainer.this.mainWindow.connect(connectioncConfig);
 		            }
@@ -168,7 +168,7 @@ public class ConfigContainer extends JPanel {
 	
 	protected void editConnection(int index) {
 		ConnectionDialog dialog = new ConnectionDialog(mainWindow, true);
-		final ConnectionConfig toUpdate = (ConnectionConfig) configListModel.getElementAt(index);
+		final ConnectionConfig toUpdate =  configListModel.getElementAt(index);
 		dialog.setConnectionConfig(toUpdate);
 		dialog.setListener(new ConfigurationListener() {
 			
@@ -189,6 +189,7 @@ public class ConfigContainer extends JPanel {
 
 	private void addNewConnection() {
 		ConnectionDialog dialog = new ConnectionDialog(mainWindow, false);
+		dialog.defaultConnectionConfig();
 		dialog.setListener(new ConfigurationListener() {
 			
 			@Override
@@ -233,7 +234,7 @@ public class ConfigContainer extends JPanel {
 			ArrayList<ConnectionConfig> connections = new ArrayList<ConnectionConfig>();
 			root.setConnections(connections);
 			for (int i = 0; i < configListModel.getSize(); i++) {
-				ConnectionConfig connection = (ConnectionConfig) configListModel.getElementAt(i);
+				ConnectionConfig connection =  configListModel.getElementAt(i);
 				connections.add(connection);
 			}
 				
